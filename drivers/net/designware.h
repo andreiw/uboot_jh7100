@@ -221,11 +221,12 @@ struct dmamacdescr {
 #endif
 
 struct dw_eth_dev {
+#ifdef ETH_DESIGNWARE_FIXED_BUFF
 	struct dmamacdescr tx_mac_descrtable[CONFIG_TX_DESCR_NUM];
 	struct dmamacdescr rx_mac_descrtable[CONFIG_RX_DESCR_NUM];
 	char txbuffs[TX_TOTAL_BUFSIZE] __aligned(ARCH_DMA_MINALIGN);
 	char rxbuffs[RX_TOTAL_BUFSIZE] __aligned(ARCH_DMA_MINALIGN);
-
+#endif /* ETH_DESIGNWARE_FIXED_BUFF */
 	u32 interface;
 	u32 max_speed;
 	u32 tx_currdescnum;
