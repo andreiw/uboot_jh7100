@@ -43,8 +43,10 @@ Now what?
 =========
 
 On first boot, interrupt the booting by pressing 'v', and:
+```
 # env default -a
 # saveenv
+```
 
 To boot the live image Ubuntu via USB3, you'll need to somehow update the initramfs. This is easiest to do if you first boot the same system from SD card, chroot and update-initramfs.
 
