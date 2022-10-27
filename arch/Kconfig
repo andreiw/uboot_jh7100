@@ -112,6 +112,7 @@ config RISCV
 	select OF_CONTROL
 	select DM
 	select SPL_SEPARATE_BSS if SPL
+	select SUPPORT_ACPI
 	imply DM_SERIAL
 	imply DM_ETH
 	imply DM_EVENT
