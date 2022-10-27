@@ -13,8 +13,9 @@ Maybe you want:
 - Newer U-Boot code than 2022.01-rc4?
 - Working ethernet?
 - Working USB3 boot?
+- All known fixes pulled from https://github.com/starfive-tech pull requests and branches.
 
-Building
+ Building
 ========
 
 - Clone https://github.com/riscv/opensbi.git
