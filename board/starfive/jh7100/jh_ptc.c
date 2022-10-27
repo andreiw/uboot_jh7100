@@ -6,6 +6,7 @@
 
 #include <inttypes.h>
 #include <linux/io.h>
+#include <linux/delay.h>
 
 #include <asm/arch/io.h>
 #include <asm/arch/jh_ptc.h>
@@ -136,16 +137,12 @@ static void ptc_start(uint32_t num)
 /* set GPIO PIN MUX */
 static void ptc_pinmux_init(uint32_t num)
 {
-	uint32_t i = 0;
-
 #if defined(CONFIG_JH_STARLIGHT)
 	if(num == 0) { /* GPIOB7 */
 		SET_GPIO_7_dout_pwm_pad_out_bit0;
 		SET_GPIO_7_doen_LOW;
-		while(0) {
-			for(i=0; i<100; i++) ;
-			SET_GPIO_7_dout_HIGH;
-		}
+		udelay(100);
+		SET_GPIO_7_dout_HIGH;
 	} else if(num == 1) { /* GPIOB5 */
 		SET_GPIO_5_dout_pwm_pad_out_bit1;
 		SET_GPIO_5_doen_LOW;
@@ -157,11 +154,9 @@ static void ptc_pinmux_init(uint32_t num)
 	if(num == 0) {
 		SET_GPIO_29_dout_pwm_pad_out_bit0;
 		SET_GPIO_29_doen_LOW;
-		while(0) {
-			SET_GPIO_29_dout_LOW;
-			for(i=0; i<100; i++) ;
-			SET_GPIO_29_dout_HIGH;
-		}
+		SET_GPIO_29_dout_LOW;
+		udelay(100);
+		SET_GPIO_29_dout_HIGH;
 	} else if(num == 1) {
 		SET_GPIO_30_dout_pwm_pad_out_bit1;
 		SET_GPIO_30_doen_LOW;
