@@ -12,7 +12,9 @@ Why
 Maybe you want:
 - Newer U-Boot code than 2022.01-rc4?
 - Working ethernet?
+- Working i2c?
 - Working USB3 boot?
+- A clkgen driver?
 - All known fixes pulled from https://github.com/starfive-tech pull requests and branches.
 
  Building
