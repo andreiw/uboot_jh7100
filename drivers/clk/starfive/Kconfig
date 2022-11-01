@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0
+
+config CLK_STARFIVE
+	bool "StarFive SoC driver support"
+	depends on CLK
+	help
+	  SoC drivers for StarFive Linux-capable SoCs.
