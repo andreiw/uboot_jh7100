@@ -549,6 +549,10 @@ static int tda19988_probe(struct udevice *dev)
 		return err;
 	}
 
+	/* wake up device - must happen before probing the HDMI address */
+	dm_i2c_reg_write(priv->cec_chip, TDA19988_CEC_ENAMODS,
+			 CEC_ENAMODS_EN_RXSENS | CEC_ENAMODS_EN_HDMI);
+
 	err = i2c_get_chip_for_busnum(0, chip_addr, 1, &priv->chip);
 	if (err) {
 		printf("i2c_get_chip_for_busnum returned %d\n", err);
@@ -556,10 +560,6 @@ static int tda19988_probe(struct udevice *dev)
 	}
 
 	priv->current_page = 0xff;
-
-	/* wake up device */
-	dm_i2c_reg_write(priv->cec_chip, TDA19988_CEC_ENAMODS,
-			 CEC_ENAMODS_EN_RXSENS | CEC_ENAMODS_EN_HDMI);
 
 	/* reset audio and I2C master */
 	tda19988_register_write(priv, REG_SOFTRESET,
