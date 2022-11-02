@@ -84,6 +84,18 @@
 		compatible = "mmc-pwrseq-simple";
 		reset-gpios = <&gpio 37 GPIO_ACTIVE_LOW>;
 	};
+
+
+	fwcon: fwcon@2000000 {
+		compatible = "starfive,fwcon";
+		display = <&hdmi_encoder>;
+		memory-region = <&sffb_reserved>;
+		reg = <0x0 0x12000000 0x0 0x10000>,
+		      <0x0 0x12240000 0x0 0x10000>;
+		reg-names = "lcdc", "clk";
+		clocks = <&clkgen JH7100_CLK_VOUT_SRC>;
+		clock-names = "vout_src";
+	};
 };
 
 &gmac {
@@ -534,7 +546,7 @@
 		};
 	};
 
-	tda998x@70 {
+	hdmi_encoder: tda998x@70 {
 		compatible = "nxp,tda998x";
 		reg = <0x70>;
 

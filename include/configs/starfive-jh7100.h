@@ -30,6 +30,11 @@
 #define CONFIG_DW_ALTDESCRIPTOR
 #endif
 
+#define ENV_DEVICE_SETTINGS \
+	"stdin=serial,usbkbd\0" \
+	"stdout=serial,vidconsole\0" \
+	"stderr=serial,vidconsole\0"
+
 /* HACK these should have '#if defined (stuff) around them like zynqp*/
 #define BOOT_TARGET_DEVICES(func) \
 	func(USB, usb, 0) \
@@ -85,6 +90,7 @@
 			"fi; " \
 		"fi\0" \
 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
+	ENV_DEVICE_SETTINGS \
 	BOOTENV \
 	BOOTENV_SF
 
