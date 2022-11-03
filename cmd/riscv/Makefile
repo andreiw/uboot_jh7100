@@ -2,3 +2,4 @@
 
 obj-$(CONFIG_CMD_EXCEPTION) += exception.o
 obj-$(CONFIG_CMD_SBI) += sbi.o
+obj-$(CONFIG_CMD_BOOTU) += bootu.o

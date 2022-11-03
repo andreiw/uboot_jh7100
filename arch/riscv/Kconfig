@@ -78,6 +78,12 @@ config SPL_SYS_DCACHE_OFF
 	help
 	  Do not enable data cache in SPL.
 
+config RISCV_RELOCATE_TO_LL
+	bool "Relocate to linked address"
+	default n
+	help
+	  Support being loaded at a different address than the link address (development only, use with bootu)
+
 # board-specific options below
 source "board/AndesTech/ax25-ae350/Kconfig"
 source "board/emulation/qemu-riscv/Kconfig"

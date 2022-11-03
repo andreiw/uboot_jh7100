@@ -289,9 +289,16 @@ config CMD_BOOTI
 	help
 	  Boot an AArch64 Linux Kernel image from memory.
 
+config CMD_BOOTU
+	bool "bootu"
+	depends on RISCV
+	default n
+	help
+	  Boot RV blob from memory (e.g. chaining U-Boot)
+
 config BOOTM_LINUX
 	bool "Support booting Linux OS images"
-	depends on CMD_BOOTM || CMD_BOOTZ || CMD_BOOTI
+	depends on CMD_BOOTM || CMD_BOOTZ || CMD_BOOTI || CMD_BOOTU
 	default y
 	help
 	  Support booting the Linux kernel directly via a command such as bootm

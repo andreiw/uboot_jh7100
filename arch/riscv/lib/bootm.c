@@ -128,6 +128,12 @@ int do_bootm_linux(int flag, int argc, char *const argv[],
 	return 0;
 }
 
+int do_bootu(int flag, int argc, char *const argv[],
+	     struct bootm_headers *images)
+{
+	return do_bootm_linux(flag, argc, argv, images);
+}
+
 int do_bootm_vxworks(int flag, int argc, char *const argv[],
 		     struct bootm_headers *images)
 {

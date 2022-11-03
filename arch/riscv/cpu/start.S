@@ -44,6 +44,30 @@ _start:
 	csrr	a0, CSR_MHARTID
 #endif
 
+#if CONFIG_IS_ENABLED(RISCV_RELOCATE_TO_LL)
+	li	t0, CONFIG_SYS_TEXT_BASE
+1:	auipc	t1, %pcrel_hi(_start)
+	addi    t1, t1, %pcrel_lo(1b)
+2:	auipc	t2, %pcrel_hi(__bss_end)
+	addi    t2, t2, %pcrel_lo(2b)
+	beq	t0, t1, no_reloc
+reloc:
+	/*
+	 * Dumb memcpy, as any overlap between source and dest
+	 * is disastrous (it can overwrite this code, for example).
+	 */
+	lwu	t3,0(t1)
+	sw	t3,0(t0)
+
+	addi	t1,t1,4
+	addi	t0,t0,4
+	bne	t1,t2,reloc
+	fence.i
+	li	t0, CONFIG_SYS_TEXT_BASE
+	jalr	ra, 0(t0)
+no_reloc:
+#endif
+
 	/*
 	 * Save hart id and dtb pointer. The thread pointer register is not
 	 * modified by C code. It is used by secondary_hart_loop.

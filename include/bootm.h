@@ -37,6 +37,7 @@ typedef int boot_os_fn(int flag, int argc, char *const argv[],
 
 extern boot_os_fn do_bootm_linux;
 extern boot_os_fn do_bootm_vxworks;
+extern boot_os_fn do_bootu;
 
 int do_bootelf(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[]);
 
