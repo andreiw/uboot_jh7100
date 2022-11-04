@@ -258,6 +258,7 @@ struct __packed acpi_fadt {
 #define ACPI_MADT_REV_ACPI_4_0		3
 #define ACPI_MADT_REV_ACPI_5_0		3
 #define ACPI_MADT_REV_ACPI_6_0		5
+#define ACPI_MADT_REV_ACPI_6_5		6
 
 #define ACPI_MCFG_REV_ACPI_3_0		1
 
@@ -309,7 +310,8 @@ enum acpi_apic_types {
 	ACPI_APIC_LX2APIC,		/* Processor local x2APIC */
 	ACPI_APIC_LX2APIC_NMI,		/* Local x2APIC NMI */
 	ACPI_APIC_GICC,			/* Generic Interrupt Ctlr CPU i/f */
-	ACPI_APIC_GICD			/* Generic Interrupt Ctlr Distributor */
+	ACPI_APIC_GICD,			/* Generic Interrupt Ctlr Distributor */
+	ACPI_APIC_RINTC = 0x18,         /* RISC-V INTC structure */
 };
 
 /* MADT: Processor Local APIC Structure */
@@ -396,12 +398,28 @@ struct __packed acpi_madr_gicc {
 struct __packed acpi_madr_gicd {
 	u8 type;
 	u8 length;
-	u16 reserved;
-	u32 gic_id;
-	u64 phys_base;
-	u32 reserved2;
-	u8 gic_version;
-	u8 reserved3[3];
+};
+
+/* flags for acpi_madt_rintc flags word */
+enum {
+	ACPI_MADT_RINTCF_ENABLED	= BIT(0),
+	ACPI_MADT_RINTCF_ON_CAPABLE	= BIT(1),
+};
+
+/**
+ * struct __packed acpi_madt_rintc - RISC-V Interrupt Controller (RINTC) Structure (0x18)
+ *
+ * This holds information about the simple, per-hart (hardware thread) interrupt
+ * controller available to supervisor mode.
+ */
+struct __packed acpi_madt_rintc {
+	u8 type;
+	u8 length;
+	u8 version;
+	u8 reserved;
+	u32 flags;
+	u64 hart_id;
+	u32 acpi_uid;
 };
 
 /* MCFG (PCI Express MMIO config space BAR description table) */
@@ -594,6 +612,7 @@ struct __packed acpi_dmar {
 #define ACPI_DBG2_ARM_SBSA_GENERIC	0x000E
 #define ACPI_DBG2_ARM_DCC		0x000F
 #define ACPI_DBG2_BCM2835		0x0010
+#define ACPI_DBG2_16550_GAS		0x0012
 
 #define ACPI_DBG2_1394_STANDARD		0x0000
 
@@ -647,7 +666,7 @@ struct __packed acpi_spcr {
 	u8 pci_function;
 	u32 pci_flags;
 	u8 pci_segment;
-	u32 reserved2;
+	u32 clock_frequency;
 };
 
 /**
