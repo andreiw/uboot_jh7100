@@ -35,6 +35,9 @@ typedef struct uart_starfive {
 } uart_starfive_t;
 
 struct starfive_uart_platdata {
+	int reg_width;
+	int reg_shift;
+	int reg_offset;
 	unsigned long clock;
 	struct uart_starfive *regs;
 };
@@ -216,28 +219,25 @@ static int _starfive_serial_getc(struct uart_starfive *regs)
 
 static int starfive_serial_setbrg(struct udevice *dev, int baudrate)
 {
-	int ret;
-	u32 clock = 0;
-	struct clk clk;
 	struct starfive_uart_platdata *platdata = dev_get_plat(dev);
 
-	ret = clk_get_by_index(dev, 0, &clk);
-	if (IS_ERR_VALUE(ret)) {
-		debug("StarFive UART failed to get clock\n");
-		ret = dev_read_u32(dev, "clock-frequency", &clock);
-		if (IS_ERR_VALUE(ret)) {
-			debug("StarFive UART clock not defined\n");
-			return 0;
-		}
-	} else {
-		clock = clk_get_rate(&clk);
-		if (IS_ERR_VALUE(clock)) {
-			debug("StarFive UART clock get rate failed\n");
-			return 0;
-		}
-	}
-	platdata->clock = clock;
 	_starfive_serial_setbrg(platdata->regs, platdata->clock, baudrate);
+
+	return 0;
+}
+
+static int starfive_serial_getinfo(struct udevice *dev,
+				   struct serial_device_info *info)
+{
+	struct starfive_uart_platdata *platdata = dev_get_plat(dev);
+
+	info->type = SERIAL_CHIP_16550_COMPATIBLE;
+	info->addr_space = SERIAL_ADDRESS_SPACE_MEMORY;
+	info->addr = (uintptr_t) platdata->regs;
+	info->reg_width = platdata->reg_width;
+	info->reg_shift = platdata->reg_shift;
+	info->reg_offset = platdata->reg_offset;
+	info->clock = platdata->clock;
 
 	return 0;
 }
@@ -290,11 +290,36 @@ static int starfive_serial_pending(struct udevice *dev, bool input)
 
 static int starfive_serial_of_to_plat(struct udevice *dev)
 {
+	int ret;
+	struct clk clk;
+	u32 clock = 0;
 	struct starfive_uart_platdata *platdata = dev_get_plat(dev);
 
 	platdata->regs = (struct uart_starfive *)dev_read_addr(dev);
-	if (IS_ERR(platdata->regs))
+	if (IS_ERR(platdata->regs)) {
 		return PTR_ERR(platdata->regs);
+	}
+
+	platdata->reg_offset = dev_read_u32_default(dev, "reg-offset", 0);
+	platdata->reg_shift = dev_read_u32_default(dev, "reg-shift", 0);
+	platdata->reg_width = dev_read_u32_default(dev, "reg-io-width", 1);
+
+	ret = clk_get_by_index(dev, 0, &clk);
+	if (IS_ERR_VALUE(ret)) {
+		debug("StarFive UART failed to get clock\n");
+		ret = dev_read_u32(dev, "clock-frequency", &clock);
+		if (IS_ERR_VALUE(ret)) {
+			debug("StarFive UART clock not defined\n");
+			return 0;
+		}
+	} else {
+		clock = clk_get_rate(&clk);
+		if (IS_ERR_VALUE(clock)) {
+			debug("StarFive UART clock get rate failed\n");
+			return 0;
+		}
+	}
+	platdata->clock = clock;
 
 	return 0;
 }
@@ -304,6 +329,7 @@ static const struct dm_serial_ops starfive_serial_ops = {
 	.getc = starfive_serial_getc,
 	.pending = starfive_serial_pending,
 	.setbrg = starfive_serial_setbrg,
+	.getinfo = starfive_serial_getinfo,
 };
 
 static const struct udevice_id starfive_serial_ids[] = {
