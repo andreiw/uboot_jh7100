@@ -20,6 +20,9 @@
 #include <dm/acpi.h>
 #include <linux/err.h>
 
+#define CPU_UID(plat) ((plat)->cpu_id)
+#define S_MODE_EXT_INTERRUPT 9
+
 int acpi_write_spcr(struct acpi_ctx *ctx, const struct acpi_writer *entry)
 {
 	struct serial_device_info serial_info = {0};
@@ -204,6 +207,127 @@ static int acpi_write_fadt(struct acpi_ctx *ctx,
 }
 ACPI_WRITER(5fact, "FADT", acpi_write_fadt, 0);
 
+int acpi_patch_rintc_ic_id(uintptr_t rintc, uint32_t acpi_uid,
+			   uint32_t ic_id)
+{
+	struct acpi_madt_rintc *r = (void *) rintc;
+
+	while (r->type == ACPI_APIC_RINTC) {
+		if (r->acpi_uid == acpi_uid) {
+			r->ic_id = ic_id;
+			return 0;
+		}
+
+		r++;
+	}
+
+	return -EINVAL;
+}
+
+uintptr_t acpi_fill_madt_plic_each(uintptr_t rintc, uintptr_t last,
+				   uintptr_t current, ofnode node)
+{
+	int i;
+	int ret;
+	int contexts;
+	u32 ndev;
+	u32 max_priority;
+	struct acpi_madt_plic *last_plic = (void *) last;
+	struct acpi_madt_plic *plic = (void *) current;
+
+	assert(ofnode_valid(node));
+
+	contexts = ofnode_count_phandle_with_args(node, "interrupts-extended", "#interrupt-cells", 0);
+	if (contexts <= 0) {
+		return current;
+	}
+
+	if (ofnode_read_u32(node, "riscv,ndev", &ndev) != 0) {
+		pr_err("couldn't read riscv,ndev\n");
+		return current;
+	}
+	if (ofnode_read_u32(node, "riscv,max-priority", &max_priority) != 0) {
+		pr_err("couldn't read riscv,max-priority\n");
+		return current;
+	}
+
+	memset(plic, 0, sizeof(*plic));
+	plic->type = ACPI_APIC_PLIC;
+	plic->length = sizeof(*plic);
+	plic->version = 1;
+	if (last_plic == NULL) {
+		plic->id = 0;
+	} else {
+		plic->id = last_plic->id + 1;
+	}
+	strcpy(&plic->man_id[0], "PLIC0");
+	plic->regs_size = 0;
+	if (last_plic == NULL) {
+		plic->gsiv_base = 0;
+	} else {
+		plic->gsiv_base = last_plic->gsiv_base + last_plic->ndev + 1;
+	}
+	plic->flags = 0;
+	plic->ndev = ndev;
+	plic->max_priority = max_priority;
+	plic->reg_base = ofnode_get_addr(node);
+	plic->regs_size = ofnode_get_size(node);
+
+	for (i = 0; i < contexts; i++) {
+		ofnode cpu_node;
+		struct ofnode_phandle_args args;
+		struct cpu_plat *cpu_plat;
+		struct udevice *dev = NULL;
+
+		ret = ofnode_parse_phandle_with_args(node, "interrupts-extended",
+						     "#interrupt-cells", 0, i, &args);
+		if (ret != 0) {
+			pr_err("couldn't parse for index %i\n", i);
+			continue;
+		}
+
+		if (args.args_count < 1) {
+			pr_err("bad args count for index %i\n", i);
+			continue;
+		}
+
+		cpu_node = ofnode_get_parent(args.node);
+		uclass_find_device_by_ofnode(UCLASS_CPU, cpu_node, &dev);
+		if (dev == NULL) {
+			/*
+			 * Some SoCs may have non-application cores, and these
+			 * aren't used by the firmware or OS.
+			 */
+			continue;
+		}
+
+		cpu_plat = dev_get_parent_plat(dev);
+		if (args.args[0] == S_MODE_EXT_INTERRUPT) {
+			acpi_patch_rintc_ic_id(rintc, CPU_UID(cpu_plat),
+					       (plic->id << 24) | i);
+		}
+	}
+
+	return (uintptr_t) (plic + 1);
+}
+
+uintptr_t acpi_fill_madt_plic(uintptr_t rintc, uintptr_t current)
+{
+	uintptr_t last = 0;
+	ofnode node = ofnode_by_compatible(ofnode_null(), "riscv,plic0");
+
+	if (!ofnode_valid(node)) {
+		return current;
+	}
+
+	do {
+		current = acpi_fill_madt_plic_each(rintc, last, current, node);
+		last = current;
+	} while (ofnode_valid(node = ofnode_by_compatible(node, "riscv, plic0")));
+
+	return current;
+}
+
 uintptr_t acpi_fill_madt_rintc(uintptr_t current)
 {
 	struct udevice *dev;
@@ -235,7 +359,7 @@ uintptr_t acpi_fill_madt_rintc(uintptr_t current)
 		 * for non-trivial SoC implementations. Anyway, this
 		 * can get patched by acpi_fill_madt.
 		 */
-		r->acpi_uid = plat->cpu_id;
+		r->acpi_uid = CPU_UID(plat);
 		r->flags = ACPI_MADT_RINTCF_ENABLED;
 		current = (uintptr_t) (r + 1);
 	} while ((uclass_find_next_device(&dev) == 0) && (dev != NULL));
@@ -253,6 +377,7 @@ int acpi_write_madt(struct acpi_ctx *ctx, const struct acpi_writer *entry)
 	struct acpi_table_header *header;
 	struct acpi_madt *madt;
 	uintptr_t current;
+	uintptr_t rintc;
 
 	madt = ctx->current;
 
@@ -264,9 +389,9 @@ int acpi_write_madt(struct acpi_ctx *ctx, const struct acpi_writer *entry)
 	header->length = sizeof(struct acpi_madt);
 	header->revision = ACPI_MADT_REV_ACPI_6_5;
 
-	current = (uintptr_t) madt + sizeof(struct acpi_madt);
-
-	current = acpi_fill_madt_rintc(current);
+	rintc = (uintptr_t) madt + sizeof(struct acpi_madt);
+	current = acpi_fill_madt_rintc(rintc);
+	current = acpi_fill_madt_plic(rintc, current);
 
 	/* Allow a board override. */
 	current = acpi_fill_madt(madt, current);

@@ -312,6 +312,7 @@ enum acpi_apic_types {
 	ACPI_APIC_GICC,			/* Generic Interrupt Ctlr CPU i/f */
 	ACPI_APIC_GICD,			/* Generic Interrupt Ctlr Distributor */
 	ACPI_APIC_RINTC = 0x18,         /* RISC-V INTC structure */
+	ACPI_APIC_PLIC = 0x1B,          /* RISC-V PLIC structure */
 };
 
 /* MADT: Processor Local APIC Structure */
@@ -420,6 +421,33 @@ struct __packed acpi_madt_rintc {
 	u32 flags;
 	u64 hart_id;
 	u32 acpi_uid;
+	u32 ic_id;
+	u64 imsic_base;
+	u32 imsic_size;
+};
+
+/* flags for acpi_madt_plic flags word */
+enum {
+	ACPI_MADT_PLICF_EDGE_QUIRK	= BIT(0),
+};
+
+/**
+ * struct __packed acpi_madt_plic - RISC-V Platform Level Interrupt Controller (0x1B)
+ *
+ * This holds information about a PLIC. More than 1 PLIC is possible in a system.
+ */
+struct __packed acpi_madt_plic {
+	u8 type;
+	u8 length;
+	u8 version;
+	u8 id;
+	u8 man_id[8];
+	u16 ndev;
+	u16 max_priority;
+	u32 flags;
+	u32 regs_size;
+	u64 reg_base;
+	u32 gsiv_base;
 };
 
 /* MCFG (PCI Express MMIO config space BAR description table) */
