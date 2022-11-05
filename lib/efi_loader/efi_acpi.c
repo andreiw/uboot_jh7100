@@ -11,6 +11,15 @@
 #include <mapmem.h>
 #include <acpi/acpi_table.h>
 
+#ifdef CONFIG_CPU_RISCV
+#define MAX_ACPI_ADDR U64_MAX
+#else
+/*
+ * x86: Map within the low 32 bits, to allow for 32bit ACPI tables.
+ */
+#define MAX_ACPI_ADDR U32_MAX
+#endif
+
 static const efi_guid_t acpi_guid = EFI_ACPI_TABLE_GUID;
 
 /*
@@ -20,8 +29,7 @@ static const efi_guid_t acpi_guid = EFI_ACPI_TABLE_GUID;
  */
 efi_status_t efi_acpi_register(void)
 {
-	/* Map within the low 32 bits, to allow for 32bit ACPI tables */
-	u64 acpi = U32_MAX;
+	u64 acpi = MAX_ACPI_ADDR;
 	efi_status_t ret;
 	ulong addr;
 
