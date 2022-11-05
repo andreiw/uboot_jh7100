@@ -54,11 +54,12 @@ struct testacpi_plat {
  * @ctx: Context to set up
  */
 static int setup_ctx_and_base_tables(struct unit_test_state *uts,
-				     struct acpi_ctx *ctx, ulong start)
+				     struct acpi_ctx *ctx, ulong start,
+				     ulong last)
 {
 	struct acpi_writer *entry = ACPI_WRITER_GET(0base);
 
-	acpi_setup_ctx(ctx, start);
+	acpi_setup_ctx(ctx, start, last);
 
 	ctx->tab_start = ctx->current;
 	ut_assertok(acpi_write_one(ctx, entry));
@@ -269,7 +270,7 @@ static int dm_test_acpi_write_tables(struct unit_test_state *uts)
 	ut_assertnonnull(buf);
 	addr = map_to_sysmem(buf);
 
-	ut_assertok(setup_ctx_and_base_tables(uts, &ctx, addr));
+	ut_assertok(setup_ctx_and_base_tables(uts, &ctx, addr, addr + BUF_SIZE - 1));
 	dmar = ctx.current;
 	ut_assertok(acpi_write_dev_tables(&ctx));
 

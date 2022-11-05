@@ -44,6 +44,7 @@ enum acpi_dump_option {
  * This contains a few useful pieces of information used when writing
  *
  * @base: Base address of ACPI tables
+ * @last: Last valid address for ACPI tables
  * @current: Current address for writing
  * @tab_start: Address of start of the table being written. This is set up
  * before the writer or driver method is called. It must not be changed by the
@@ -62,6 +63,7 @@ enum acpi_dump_option {
  */
 struct acpi_ctx {
 	void *base;
+	void *last;
 	void *current;
 	void *tab_start;
 	struct acpi_rsdp *rsdp;
@@ -330,8 +332,9 @@ int acpi_write_one(struct acpi_ctx *ctx, const struct acpi_writer *entry);
  *
  * @ctx: ACPI context to set up
  * @start: Start address for ACPI table
+ * @last: Last valid address for ACPI table
  */
-void acpi_setup_ctx(struct acpi_ctx *ctx, ulong start);
+void acpi_setup_ctx(struct acpi_ctx *ctx, ulong start, ulong last);
 
 /**
  * acpi_write_one() - Call a single ACPI writer entry

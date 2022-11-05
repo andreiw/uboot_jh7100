@@ -145,7 +145,7 @@ static int bios_linker_add_checksum(struct udevice *dev,
 }
 
 /* This function loads and patches ACPI tables provided by QEMU */
-ulong write_acpi_tables(ulong addr)
+ulong write_acpi_tables(ulong addr, ulong last)
 {
 	int i, ret;
 	struct fw_file *file;

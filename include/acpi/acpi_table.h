@@ -938,9 +938,10 @@ int acpi_fill_csrt(struct acpi_ctx *ctx);
  * This writes all ACPI tables to the given address
  *
  * @start: Start address for the tables
+ * @last:  Last valid address for the tables.
  * @return address of end of tables, where the next tables can be written
  */
-ulong write_acpi_tables(ulong start);
+ulong write_acpi_tables(ulong start, ulong last);
 
 #endif /* !__ACPI__*/
 

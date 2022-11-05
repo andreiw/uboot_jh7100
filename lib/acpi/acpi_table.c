@@ -124,21 +124,25 @@ void acpi_fill_header(struct acpi_table_header *header, char *signature)
 void acpi_align(struct acpi_ctx *ctx)
 {
 	ctx->current = (void *)ALIGN((ulong)ctx->current, 16);
+	assert(ctx->current <= ctx->last);
 }
 
 void acpi_align64(struct acpi_ctx *ctx)
 {
 	ctx->current = (void *)ALIGN((ulong)ctx->current, 64);
+	assert(ctx->current <= ctx->last);
 }
 
 void acpi_inc(struct acpi_ctx *ctx, uint amount)
 {
 	ctx->current += amount;
+	assert(ctx->current <= ctx->last);
 }
 
 void acpi_inc_align(struct acpi_ctx *ctx, uint amount)
 {
 	ctx->current += amount;
+	assert(ctx->current <= ctx->last);
 	acpi_align(ctx);
 }
 
