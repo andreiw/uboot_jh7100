@@ -22,6 +22,7 @@
 
 #define CPU_UID(plat) ((plat)->cpu_id)
 #define S_MODE_EXT_INTERRUPT 9
+#define MAX_ISA_STRING_LEN 65535       // something unreasonable
 
 int acpi_write_spcr(struct acpi_ctx *ctx, const struct acpi_writer *entry)
 {
@@ -406,3 +407,103 @@ int acpi_write_madt(struct acpi_ctx *ctx, const struct acpi_writer *entry)
 	return 0;
 }
 ACPI_WRITER(5madt, NULL, acpi_write_madt, 0);
+
+uintptr_t acpi_fill_rhct_nodes(struct acpi_rhct *rhct,
+			       uintptr_t current,
+			       u32 isa_offset,
+			       struct udevice *dev)
+{
+	struct cpu_plat *plat;
+
+	/*
+	 * This only works if all possible CPUs are on. Otherwise,
+	 * use ofnode_for_each_subnode(node, dev_ofnode(dev->parent))
+	 * and manually parse similar to riscv_cpu.c.
+	 */
+	do {
+		struct acpi_rhct_node_hart *hart = (void *) current;
+		plat = dev_get_parent_plat(dev);
+
+		memset(hart, 0, sizeof(*hart));
+
+		hart->type = RHCT_NODE_TYPE_HART;
+		hart->length = sizeof(*hart);
+		hart->revision = 1;
+		hart->offsets_count = 1; // only the ISA node
+		/*
+		 * Same caveat as acpi_fill_madt_rintc.
+		 */
+		hart->acpi_uid = CPU_UID(plat);
+		hart->isa_node_offset = isa_offset;
+		current = (uintptr_t) (hart + 1);
+
+		rhct->nodes_count++;
+	} while ((uclass_find_next_device(&dev) == 0) && (dev != NULL));
+
+	return current;
+}
+
+uintptr_t acpi_fill_rhct_isa(struct acpi_rhct *rhct,
+			     uintptr_t current,
+			     struct udevice *dev)
+{
+	struct acpi_rhct_node_isa *isa = (void *) current;
+
+	memset(isa, 0, sizeof(*isa));
+	isa->type = RHCT_NODE_TYPE_ISA;
+	isa->length = sizeof(*isa);
+	isa->revision = 1;
+
+	if (cpu_get_desc(dev, &isa->string_data[0], MAX_ISA_STRING_LEN) != 0) {
+		pr_err("couldn't get ISA string\n");
+		return current;
+	}
+
+	isa->isa_string_len = strlen(isa->string_data) + 1;
+	isa->length += round_up(isa->isa_string_len, sizeof (u16));
+
+	rhct->nodes_count++;
+	return current + isa->length;
+}
+
+int acpi_write_rhct(struct acpi_ctx *ctx, const struct acpi_writer *entry)
+{
+	struct acpi_table_header *header;
+	struct acpi_rhct *rhct;
+	uintptr_t current;
+	struct udevice *dev;
+	struct cpu_plat *plat;
+	int ret;
+
+	ret = uclass_find_first_device(UCLASS_CPU, &dev);
+	if (ret < 0) {
+		debug("madt: unable to find RISC-V cpu device\n");
+		return ret;
+	}
+	plat = dev_get_parent_plat(dev);
+
+	rhct = ctx->current;
+	memset(rhct, 0, sizeof(*rhct));
+	header = &rhct->header;
+
+	/* Fill out header and basic RHCT fields */
+	acpi_fill_header(header, "RHCT");
+	header->length = sizeof(*rhct);
+	header->revision = 1;
+	rhct->tb_freq = plat->timebase_freq;
+	rhct->node_offset = sizeof(*rhct);
+
+	current = (uintptr_t) rhct + rhct->node_offset;
+	current = acpi_fill_rhct_isa(rhct, current, dev);
+	current = acpi_fill_rhct_nodes(rhct, current, rhct->node_offset, dev);
+
+	/* (Re)calculate length and checksum */
+	header->length = current - (uintptr_t) rhct;
+
+	header->checksum = table_compute_checksum((void *)rhct, header->length);
+	acpi_add_table(ctx, rhct);
+	acpi_inc(ctx, rhct->header.length);
+
+	return 0;
+}
+ACPI_WRITER(5rhct, NULL, acpi_write_rhct, 0);

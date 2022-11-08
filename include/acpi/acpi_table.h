@@ -672,6 +672,40 @@ struct __packed acpi_dbg2_device {
 	u16 address_size_offset;
 };
 
+enum {
+	RHCT_NODE_TYPE_ISA = 0,
+	RHCT_NODE_TYPE_HART = 65535
+};
+
+/* RHCT ISA string node structure */
+struct __packed acpi_rhct_node_isa {
+	u16 type;
+	u16 length;
+	u16 revision;
+	u16 isa_string_len;
+	u8 string_data[0];
+};
+
+/* RHCT hart info node structure */
+struct __packed acpi_rhct_node_hart {
+	u16 type;
+	u16 length;
+	u16 revision;
+	u16 offsets_count;
+	u32 acpi_uid;
+	u32 isa_node_offset;
+};
+
+/* RHCT (RISC-V Hart Capabilities Table) */
+struct __packed acpi_rhct {
+	struct acpi_table_header header;
+	u32 reserved;
+	u64 tb_freq;
+	u32 nodes_count;
+	u32 node_offset;
+	u8  node_data[0];
+};
+
 /* SPCR (Serial Port Console Redirection table) */
 struct __packed acpi_spcr {
 	struct acpi_table_header header;
@@ -826,6 +860,7 @@ enum acpi_tables {
 	ACPITAB_MADT,
 	ACPITAB_MCFG,
 	ACPITAB_NHLT,
+	ACPITAB_RHCT,
 	ACPITAB_RSDP,
 	ACPITAB_RSDT,
 	ACPITAB_SLIT,

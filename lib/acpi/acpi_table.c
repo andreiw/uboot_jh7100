@@ -107,6 +107,8 @@ int acpi_get_table_revision(enum acpi_tables table)
 		return 1;
 	case ACPITAB_SPCR:
 		return 2;
+	case ACPITAB_RHCT:
+		return 1;
 	default:
 		return -EINVAL;
 	}
