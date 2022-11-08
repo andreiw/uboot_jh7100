@@ -337,9 +337,11 @@ efi_status_t efi_init_obj_list(void)
 		goto out;
 #endif
 #ifdef CONFIG_GENERATE_ACPI_TABLE
-	ret = efi_acpi_register();
-	if (ret != EFI_SUCCESS)
-		goto out;
+	if (env_get_yesno("sdt_is_fdt") != 1) {
+		ret = efi_acpi_register();
+		if (ret != EFI_SUCCESS)
+			goto out;
+	}
 #endif
 #ifdef CONFIG_GENERATE_SMBIOS_TABLE
 	ret = efi_smbios_register();

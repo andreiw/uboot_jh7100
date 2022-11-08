@@ -162,8 +162,6 @@ static efi_status_t efi_env_set_load_options(efi_handle_t handle,
 	return ret;
 }
 
-#if !CONFIG_IS_ENABLED(GENERATE_ACPI_TABLE)
-
 /**
  * copy_fdt() - Copy the device tree to a new location available to EFI
  *
@@ -250,8 +248,6 @@ static void *get_config_table(const efi_guid_t *guid)
 	return NULL;
 }
 
-#endif /* !CONFIG_IS_ENABLED(GENERATE_ACPI_TABLE) */
-
 /**
  * efi_install_fdt() - install device tree
  *
@@ -271,18 +267,19 @@ static void *get_config_table(const efi_guid_t *guid)
  */
 efi_status_t efi_install_fdt(void *fdt)
 {
+	struct bootm_headers img = { 0 };
+	efi_status_t ret;
+
 	/*
 	 * The EBBR spec requires that we have either an FDT or an ACPI table
 	 * but not both.
 	 */
 #if CONFIG_IS_ENABLED(GENERATE_ACPI_TABLE)
-	if (fdt) {
+	if (env_get_yesno("sdt_is_fdt") != 1 && fdt) {
 		log_warning("WARNING: Can't have ACPI table and device tree - ignoring DT.\n");
 		return EFI_SUCCESS;
 	}
-#else
-	struct bootm_headers img = { 0 };
-	efi_status_t ret;
+#endif
 
 	if (fdt == EFI_FDT_USE_INTERNAL) {
 		const char *fdt_opt;
@@ -338,7 +335,6 @@ efi_status_t efi_install_fdt(void *fdt)
 		log_err("ERROR: failed to install device tree\n");
 		return ret;
 	}
-#endif /* GENERATE_ACPI_TABLE */
 
 	return EFI_SUCCESS;
 }
