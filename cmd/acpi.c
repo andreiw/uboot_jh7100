@@ -45,19 +45,19 @@ static void dump_hdr(struct acpi_table_header *hdr)
 struct acpi_table_header *find_table(const char *sig)
 {
 	struct acpi_rsdp *rsdp;
-	struct acpi_rsdt *rsdt;
+	struct acpi_xsdt *xsdt;
 	int len, i, count;
 
 	rsdp = map_sysmem(gd_acpi_start(), 0);
 	if (!rsdp)
 		return NULL;
-	rsdt = map_sysmem(rsdp->rsdt_address, 0);
-	len = rsdt->header.length - sizeof(rsdt->header);
-	count = len / sizeof(u32);
+	xsdt = map_sysmem(rsdp->xsdt_address, 0);
+	len = xsdt->header.length - sizeof(xsdt->header);
+	count = len / sizeof(u64);
 	for (i = 0; i < count; i++) {
 		struct acpi_table_header *hdr;
 
-		hdr = map_sysmem(rsdt->entry[i], 0);
+		hdr = map_sysmem(xsdt->entry[i], 0);
 		if (!memcmp(hdr->signature, sig, ACPI_NAME_LEN))
 			return hdr;
 		if (!memcmp(hdr->signature, "FACP", ACPI_NAME_LEN)) {
@@ -96,25 +96,25 @@ static void list_fadt(struct acpi_fadt *fadt)
 		dump_hdr(map_sysmem(fadt->firmware_ctrl, 0));
 }
 
-static int list_rsdt(struct acpi_rsdt *rsdt, struct acpi_xsdt *xsdt)
+static int list_xsdt(struct acpi_rsdt *rsdt, struct acpi_xsdt *xsdt)
 {
 	int len, i, count;
 
-	dump_hdr(&rsdt->header);
-	if (xsdt)
-		dump_hdr(&xsdt->header);
-	len = rsdt->header.length - sizeof(rsdt->header);
-	count = len / sizeof(u32);
+	dump_hdr(&xsdt->header);
+	if (rsdt)
+		dump_hdr(&rsdt->header);
+	len = xsdt->header.length - sizeof(xsdt->header);
+	count = len / sizeof(u64);
 	for (i = 0; i < count; i++) {
 		struct acpi_table_header *hdr;
 
-		if (!rsdt->entry[i])
+		if (!xsdt->entry[i])
 			break;
-		hdr = map_sysmem(rsdt->entry[i], 0);
+		hdr = map_sysmem(xsdt->entry[i], 0);
 		dump_hdr(hdr);
 		if (!memcmp(hdr->signature, "FACP", ACPI_NAME_LEN))
 			list_fadt((struct acpi_fadt *)hdr);
-		if (xsdt) {
+		if (rsdt) {
 			if (xsdt->entry[i] != rsdt->entry[i]) {
 				printf("   (xsdt mismatch %llx)\n",
 				       xsdt->entry[i]);
@@ -134,7 +134,7 @@ static int list_rsdp(struct acpi_rsdp *rsdp)
 	       rsdp->length, rsdp->revision, rsdp->oem_id);
 	rsdt = map_sysmem(rsdp->rsdt_address, 0);
 	xsdt = map_sysmem(rsdp->xsdt_address, 0);
-	list_rsdt(rsdt, xsdt);
+	list_xsdt(rsdt, xsdt);
 
 	return 0;
 }

@@ -158,20 +158,47 @@ int acpi_add_table(struct acpi_ctx *ctx, void *table)
 	struct acpi_rsdt *rsdt;
 	struct acpi_xsdt *xsdt;
 
-	/* The RSDT is mandatory while the XSDT is not */
-	rsdt = ctx->rsdt;
+	/*
+	 * The RSDT is mandatory while the XSDT is not,
+	 * yet modern systems prefer XSDT to avoid 32-bit
+	 * issues (or because they have no low RAM.
+	 */
+	xsdt = ctx->xsdt;
+	assert(xsdt != NULL);
 
 	/* This should always be MAX_ACPI_TABLES */
-	entries_num = ARRAY_SIZE(rsdt->entry);
+	entries_num = ARRAY_SIZE(xsdt->entry);
 
 	for (i = 0; i < entries_num; i++) {
-		if (rsdt->entry[i] == 0)
+		if (xsdt->entry[i] == 0) {
 			break;
+		}
 	}
 
 	if (i >= entries_num) {
 		log_err("ACPI: Error: too many tables\n");
 		return -E2BIG;
+	}
+
+	/* Add table to the XSDT */
+	xsdt->entry[i] = map_to_sysmem(table);
+
+	/* Fix XSDT length */
+	xsdt->header.length = sizeof(struct acpi_table_header) +
+				(sizeof(u64) * (i + 1));
+
+	/* Re-calculate checksum */
+	xsdt->header.checksum = 0;
+	xsdt->header.checksum = table_compute_checksum((u8 *)xsdt,
+						       xsdt->header.length);
+
+	/*
+	 * And now the same thing for the RSDT. We use the same index as for
+	 * now we want the XSDT and RSDT to always be in sync in U-Boot
+	 */
+	rsdt = ctx->rsdt;
+	if (rsdt == NULL) {
+		return 0;
 	}
 
 	/* Add table to the RSDT */
@@ -185,24 +212,6 @@ int acpi_add_table(struct acpi_ctx *ctx, void *table)
 	rsdt->header.checksum = 0;
 	rsdt->header.checksum = table_compute_checksum((u8 *)rsdt,
 						       rsdt->header.length);
-
-	/*
-	 * And now the same thing for the XSDT. We use the same index as for
-	 * now we want the XSDT and RSDT to always be in sync in U-Boot
-	 */
-	xsdt = ctx->xsdt;
-
-	/* Add table to the XSDT */
-	xsdt->entry[i] = map_to_sysmem(table);
-
-	/* Fix XSDT length */
-	xsdt->header.length = sizeof(struct acpi_table_header) +
-				(sizeof(u64) * (i + 1));
-
-	/* Re-calculate checksum */
-	xsdt->header.checksum = 0;
-	xsdt->header.checksum = table_compute_checksum((u8 *)xsdt,
-						       xsdt->header.length);
 
 	return 0;
 }

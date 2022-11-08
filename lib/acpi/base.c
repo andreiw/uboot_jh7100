@@ -37,6 +37,10 @@ static void acpi_write_rsdt(struct acpi_rsdt *rsdt)
 {
 	struct acpi_table_header *header = &rsdt->header;
 
+	if (rsdt == NULL) {
+		return;
+	}
+
 	/* Fill out header fields */
 	acpi_fill_header(header, "RSDT");
 	header->length = sizeof(struct acpi_rsdt);
@@ -71,8 +75,12 @@ static int acpi_write_base(struct acpi_ctx *ctx,
 	/* We need at least an RSDP and an RSDT Table */
 	ctx->rsdp = ctx->current;
 	acpi_inc_align(ctx, sizeof(struct acpi_rsdp));
+#ifdef CONFIG_CPU_RISCV
+	ctx->rsdt = 0;
+#else
 	ctx->rsdt = ctx->current;
 	acpi_inc_align(ctx, sizeof(struct acpi_rsdt));
+#endif
 	ctx->xsdt = ctx->current;
 	acpi_inc_align(ctx, sizeof(struct acpi_xsdt));
 
