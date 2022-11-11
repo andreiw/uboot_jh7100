@@ -445,9 +445,19 @@ static int tda19988_enable(struct udevice *dev, int panel_bpp,
 		reg |= VIP_CNTRL_3_H_TGL;
 	if (timing->flags & DISPLAY_FLAGS_VSYNC_LOW)
 		reg |= VIP_CNTRL_3_V_TGL;
+
+	if (CONFIG_NXP_TDA19988_VIP_CNTRL_3_OVERRIDE != 0) {
+		reg = CONFIG_NXP_TDA19988_VIP_CNTRL_3_OVERRIDE;
+	}
+
 	tda19988_register_write(priv, REG_VIP_CNTRL_3, reg);
 
-	tda19988_register_write(priv, REG_VIDFORMAT, 0x00);
+	reg = 0x00;
+	if (CONFIG_NXP_TDA19988_VIDFORMAT_OVERRIDE != 0) {
+		reg = CONFIG_NXP_TDA19988_VIDFORMAT_OVERRIDE;
+	}
+	tda19988_register_write(priv, REG_VIDFORMAT, reg);
+
 	tda19988_register_write16(priv, REG_REFPIX_MSB,
 				  timing->hfront_porch.typ + 3);
 	tda19988_register_write16(priv, REG_REFLINE_MSB,
@@ -495,6 +505,11 @@ static int tda19988_enable(struct udevice *dev, int panel_bpp,
 		reg |= TBG_CNTRL_1_H_TGL;
 	if (timing->flags & DISPLAY_FLAGS_VSYNC_LOW)
 		reg |= TBG_CNTRL_1_V_TGL;
+
+	if (CONFIG_NXP_TDA19988_TBG_CNTRL_1_OVERRIDE != 0) {
+		reg = CONFIG_NXP_TDA19988_TBG_CNTRL_1_OVERRIDE;
+	}
+
 	tda19988_register_write(priv, REG_TBG_CNTRL_1, reg);
 
 	/* must be last register set: */

@@ -576,6 +576,24 @@ config NXP_TDA19988
 	  This enables support for the NXP TDA19988 HDMI encoder. This encoder
 	  will convert RGB data streams into HDMI-encoded signals.
 
+config NXP_TDA19988_VIP_CNTRL_3_OVERRIDE
+	prompt "Override value for VIP CNTRL3 register"
+	hex
+	depends on NXP_TDA19988
+	default 0
+
+config NXP_TDA19988_TBG_CNTRL_1_OVERRIDE
+	prompt "Override value for TBG CNTRL1 register"
+	hex
+	depends on NXP_TDA19988
+	default 0
+
+config NXP_TDA19988_VIDFORMAT_OVERRIDE
+	prompt "Override value for VIDFORMAT register"
+	hex
+	depends on NXP_TDA19988
+	default 0
+
 config ATMEL_HLCD
 	bool "Enable ATMEL video support using HLCDC"
 	help
