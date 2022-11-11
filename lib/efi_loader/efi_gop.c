@@ -488,6 +488,15 @@ efi_status_t efi_gop_register(void)
 	}
 
 	priv = dev_get_uclass_priv(vdev);
+
+	if (priv->flush_dcache) {
+		/*
+		 * GOP doesn't support non-cache coherent video, today.
+		 */
+		debug("WARNING: ignoring non-cache coherent video\n");
+		return EFI_SUCCESS;
+	}
+
 	bpix = priv->bpix;
 	format = priv->format;
 	col = video_get_xsize(vdev);
