@@ -195,9 +195,9 @@ int video_sync(struct udevice *vid, bool force)
 	/*
 	 * flush_dcache_range() is declared in common.h but it seems that some
 	 * architectures do not actually implement it. Is there a way to find
-	 * out whether it exists? For now, ARM is safe.
+	 * out whether it exists? For now, ARM and RISC-V are safe.
 	 */
-#if defined(CONFIG_ARM) && !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
+#if (defined(CONFIG_ARM) || defined(CONFIG_RISCV)) && !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
 	struct video_priv *priv = dev_get_uclass_priv(vid);
 
 	if (priv->flush_dcache) {
