@@ -68,6 +68,8 @@ struct vidconsole_priv {
 	int ycur;
 	int rows;
 	int cols;
+	int max_rows;
+	int max_cols;
 	int x_charsize;
 	int y_charsize;
 	int tab_width_frac;
@@ -303,6 +305,7 @@ static inline int vidconsole_memmove(struct udevice *dev, void *dst,
 	return 0;
 }
 
+int vidconsole_set_apparent_size(struct udevice *dev, unsigned rows, unsigned cols);
 #endif
 
 #endif

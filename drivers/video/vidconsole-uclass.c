@@ -630,6 +630,9 @@ static int vidconsole_post_probe(struct udevice *dev)
 	struct vidconsole_priv *priv = dev_get_uclass_priv(dev);
 	struct stdio_dev *sdev = &priv->sdev;
 
+	priv->max_rows = priv->rows;
+	priv->max_cols = priv->cols;
+
 	if (!priv->tab_width_frac)
 		priv->tab_width_frac = VID_TO_POS(priv->x_charsize) * 8;
 
@@ -671,6 +674,29 @@ int vidconsole_memmove(struct udevice *dev, void *dst, const void *src,
 	return vidconsole_sync_copy(dev, dst, dst + size);
 }
 #endif
+
+int vidconsole_set_apparent_size(struct udevice *dev, unsigned rows,
+				 unsigned cols)
+{
+	struct vidconsole_priv *priv = dev_get_uclass_priv(dev);
+
+	if (rows == 0 && cols == 0) {
+		priv->rows = priv->max_rows;
+		priv->cols = priv->max_cols;
+		return 0;
+	} else if (priv->rows == rows &&
+		   priv->cols == cols) {
+		return 0;
+	} else if (rows == 0 || cols == 0 ||
+		   rows > priv->max_rows ||
+		   cols > priv->max_cols) {
+		return -EINVAL;
+	}
+
+	priv->rows = rows;
+	priv->cols = cols;
+	return 0;
+}
 
 #if CONFIG_IS_ENABLED(CMD_VIDCONSOLE)
 void vidconsole_position_cursor(struct udevice *dev, unsigned col, unsigned row)

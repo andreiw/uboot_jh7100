@@ -374,8 +374,16 @@ static efi_status_t do_bootefi_exec(efi_handle_t handle, void *load_options)
 		goto out;
 	}
 
+	/*
+	 * Make sure the video console (if any) matches the EFI console mode.
+	 */
+	efi_console_sync_vidconsole(true);
+
 	/* Call our payload! */
 	ret = EFI_CALL(efi_start_image(handle, &exit_data_size, &exit_data));
+
+	efi_console_sync_vidconsole(false);
+
 	if (ret != EFI_SUCCESS) {
 		log_err("## Application failed, r = %lu\n",
 			ret & ~EFI_ERROR_MASK);

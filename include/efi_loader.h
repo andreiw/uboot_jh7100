@@ -1129,5 +1129,6 @@ efi_status_t efi_console_get_u16_string
 		 int row, int col);
 
 efi_status_t efi_disk_get_device_name(const efi_handle_t handle, char *buf, int size);
+void efi_console_sync_vidconsole(bool enable);
 
 #endif /* _EFI_LOADER_H */

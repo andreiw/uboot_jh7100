@@ -342,6 +342,39 @@ static int __maybe_unused query_vidconsole(int *rows, int *cols)
 }
 
 /**
+ * efi_console_sync_vidconsole - ensure vidconsole size matches efi_con_mode.mode.
+ */
+void efi_console_sync_vidconsole(bool enable)
+{
+	struct stdio_dev *stdout_dev;
+	struct udevice *dev;
+	struct vidconsole_priv *priv;
+	struct cout_mode *mode = &efi_cout_modes[efi_con_mode.mode];
+	stdout_dev = stdio_get_by_name("vidconsole");
+
+	if (stdout_dev == NULL) {
+		return;
+	}
+
+	dev = stdout_dev->priv;
+	if (dev == NULL) {
+		return;
+	}
+
+	priv = dev_get_uclass_priv(dev);
+	if (priv == NULL) {
+		return;
+	}
+
+	if (enable) {
+		vidconsole_set_apparent_size(dev, mode->rows, mode->columns);
+	} else {
+		vidconsole_set_apparent_size(dev, 0, 0);
+	}
+}
+
+
+/**
  * efi_setup_console_size() - update the mode table.
  *
  * By default the only mode available is 80x25. If the console has at least 50
@@ -518,7 +551,7 @@ static efi_status_t EFIAPI efi_cout_set_mode(
 		return EFI_EXIT(EFI_UNSUPPORTED);
 
 	efi_con_mode.mode = mode_number;
-	efi_clear_screen();
+	efi_console_sync_vidconsole(true);
 
 	return EFI_EXIT(EFI_SUCCESS);
 }
