@@ -18,6 +18,7 @@
 #include <video_console.h>
 #include <video_font.h>		/* Bitmap font for code page 437 */
 #include <linux/ctype.h>
+#include <charset.h>
 
 /*
  * Structure to describe a console color
@@ -490,6 +491,12 @@ static int vidconsole_output_glyph(struct udevice *dev, char ch)
 {
 	struct vidconsole_priv *priv = dev_get_uclass_priv(dev);
 	int ret;
+	static char buffer[5];
+
+	ch = utf8_to_cp437_stream(ch, buffer);
+	if (ch == 0) {
+		return ch;
+	}
 
 	/*
 	 * Failure of this function normally indicates an unsupported
