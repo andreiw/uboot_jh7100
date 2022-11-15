@@ -371,14 +371,26 @@ static int tda19988_enable(struct udevice *dev, int panel_bpp,
 			   const struct display_timing *timing)
 {
 	struct tda19988_priv *priv = dev_get_priv(dev);
-	u8 div = 148500000 / timing->pixelclock.typ, reg;
+	u8 div, reg;
 	u16 line_clocks, lines;
+	u32 tmds_clock;
 
-	if (dev != 0) {
-		div--;
-		if (div > 3)
-			div = 3;
+	tmds_clock = timing->pixelclock.typ / 1000;
+
+	/*
+	 * The divisor is power-of-2. The TDA9983B datasheet gives
+	 * this as ranges of Msample/s, which is 10x the TMDS clock:
+	 *   0 - 800 to 1500 Msample/s
+	 *   1 - 400 to 800 Msample/s
+	 *   2 - 200 to 400 Msample/s
+	 *   3 - as 2 above
+	 */
+	for (div = 0; div < 3; div++) {
+		if (80000 >> div <= tmds_clock) {
+			break;
+		}
 	}
+
 	/* first disable the video ports */
 	tda19988_register_write(priv, REG_ENA_VP_0, 0);
 	tda19988_register_write(priv, REG_ENA_VP_1, 0);
@@ -416,6 +428,7 @@ static int tda19988_enable(struct udevice *dev, int panel_bpp,
 
 	tda19988_register_write(priv, REG_SERIALIZER, 0);
 	tda19988_register_write(priv, REG_HVF_CNTRL_1, HVF_CNTRL_1_VQR(0));
+
 
 	tda19988_register_write(priv, REG_RPT_CNTRL, 0);
 	tda19988_register_write(priv, REG_SEL_CLK, SEL_CLK_SEL_VRF_CLK(0) |
