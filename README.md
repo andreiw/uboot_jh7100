@@ -6,6 +6,11 @@ on top of latest U-Boot, with further fixes/work.
 
 Tested on the Starlight aka BeagleV.
 
+See https://www.youtube.com/watch?v=_gZ98c7Nf_k for a demo.
+
+![screenshot of U-Boot on BeagleV with USB and HDMI video](https://github.com/andreiw/uboot_jh7100/blob/rebase-2022-10-27/uboot_with_usb_and_video.jpg  "U-Boot with rich I/O on JH7100-based board")
+
+
 Why
 ===
 
@@ -13,8 +18,11 @@ Maybe you want:
 - Newer U-Boot code than 2022.01-rc4?
 - Working ethernet?
 - Working i2c?
-- Working USB3 boot?
+- USB3 boot?
+- USB keyboard?
+- HDMI video? (1080p, 1024x768)
 - A clkgen driver?
+- EFI console fixes for vidconsole?
 - All known fixes pulled from https://github.com/starfive-tech pull requests and branches.
 
  Building
