@@ -515,12 +515,6 @@ static int tda19988_enable(struct udevice *dev, int panel_bpp,
 	/* must be last register set: */
 	tda19988_register_write(priv, REG_TBG_CNTRL_0, 0);
 
-	/* turn on HDMI HDCP */
-	reg &= ~TBG_CNTRL_1_DWIN_DIS;
-	tda19988_register_write(priv, REG_TBG_CNTRL_1, reg);
-	tda19988_register_write(priv, REG_ENC_CNTRL, ENC_CNTRL_CTL_CODE(1));
-	tda19988_register_set(priv, REG_TX33, TX33_HDMI);
-
 	mdelay(400);
 
 	/* enable video ports */
