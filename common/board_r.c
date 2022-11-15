@@ -734,7 +734,12 @@ static init_fnc_t init_sequence_r[] = {
 	console_init_r,		/* fully init console as a device */
 #ifdef CONFIG_DISPLAY_BOARDINFO_LATE
 	console_announce_r,
+#if defined(CONFIG_DISPLAY_CPUINFO) && CONFIG_IS_ENABLED(CPU)
+	print_cpuinfo,
+#endif
 	show_board_info,
+	announce_dram_init,
+	show_dram_config,
 #endif
 #ifdef CONFIG_ARCH_MISC_INIT
 	arch_misc_init,		/* miscellaneous arch-dependent init */

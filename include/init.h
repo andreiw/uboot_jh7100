@@ -293,7 +293,10 @@ int init_func_vid(void);
 
 /* common/board_info.c */
 int checkboard(void);
+int print_cpuinfo(void);
 int show_board_info(void);
+int announce_dram_init(void);
+int show_dram_config(void);
 
 /**
  * Get the uppermost pointer that is valid to access

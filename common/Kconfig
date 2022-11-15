@@ -546,8 +546,8 @@ config DISPLAY_BOARDINFO_LATE
 	bool "Display information about the board during late start up"
 	help
 	  Display information about the board that U-Boot is running on after
-	  the relocation phase. The board function checkboard() is called to do
-	  this.
+	  the relocation phase. This includes CPU (if DISPLAY_CPUINFO is set)
+	  and DRAM info.
 
 menu "Start-up hooks"
 

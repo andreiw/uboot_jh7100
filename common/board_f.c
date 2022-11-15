@@ -166,7 +166,7 @@ static int print_resetinfo(void)
 #endif
 
 #if defined(CONFIG_DISPLAY_CPUINFO) && CONFIG_IS_ENABLED(CPU)
-static int print_cpuinfo(void)
+int print_cpuinfo(void)
 {
 	struct udevice *dev;
 	char desc[512];
@@ -192,7 +192,7 @@ static int print_cpuinfo(void)
 }
 #endif
 
-static int announce_dram_init(void)
+int announce_dram_init(void)
 {
 	puts("DRAM:  ");
 	return 0;
@@ -228,7 +228,7 @@ static int sizes_near(unsigned long long size1, unsigned long long size2)
 	return size1_scale == size2_scale && size1_val == size2_val;
 }
 
-static int show_dram_config(void)
+int show_dram_config(void)
 {
 	unsigned long long size;
 	int i;
@@ -878,7 +878,7 @@ static const init_fnc_t init_sequence_f[] = {
 #if defined(CONFIG_SYSRESET)
 	print_resetinfo,
 #endif
-#if defined(CONFIG_DISPLAY_CPUINFO)
+#if !defined(CONFIG_DISPLAY_BOARDINFO_LATE) && defined(CONFIG_DISPLAY_CPUINFO)
 	print_cpuinfo,		/* display cpu info (and speed) */
 #endif
 #if defined(CONFIG_DTB_RESELECT)
@@ -896,7 +896,9 @@ static const init_fnc_t init_sequence_f[] = {
 #if defined(CONFIG_VID) && !defined(CONFIG_SPL)
 	init_func_vid,
 #endif
+#if !defined(CONFIG_DISPLAY_BOARDINFO_LATE)
 	announce_dram_init,
+#endif
 	dram_init,		/* configure available RAM banks */
 #ifdef CONFIG_POST
 	post_init_f,
@@ -944,7 +946,9 @@ static const init_fnc_t init_sequence_f[] = {
 	reserve_arch,
 	reserve_stacks,
 	dram_init_banksize,
+#if !defined(CONFIG_DISPLAY_BOARDINFO_LATE)
 	show_dram_config,
+#endif
 	INIT_FUNC_WATCHDOG_RESET
 	setup_bdinfo,
 	display_new_sp,
