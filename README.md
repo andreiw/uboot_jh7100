@@ -35,7 +35,7 @@ Maybe you want:
 ```
 export BUILD_PLATFORM=starlight # starlight for BeagleV, visionfive for VisionFive V1
 pushd uboot_jh7100
-make starfive_jh7100_$(BUILD_PLATFORM)_smode_defconfig ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
+make starfive_jh7100_${BUILD_PLATFORM}_smode_defconfig ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
 make u-boot.bin u-boot.dtb ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu-
 popd
 pushd opensbi
